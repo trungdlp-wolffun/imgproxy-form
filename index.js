@@ -9,14 +9,14 @@ function hex2a(hexx) {
 
 // URL generator logic
 function generateProxyUrl(opts) {
-  var encoded_url = btoa(opts.url).replace("=", "").replace('/', '_').replace('+', '-')
-  var path = "/" + opts.resize + "/" + opts.width + "/" + opts.height + "/" +
-             opts.gravity + "/" + opts.enlarge + "/" + encoded_url + "." + opts.extension
+  var encoded_url = btoa(opts.url).replace(/=/g, "").replace(/\//g, '_').replace(/\+/g, '-')
+  var path = "/rs:" + opts.resize + ":" + opts.width + ":" + opts.height + ":" + opts.enlarge +
+             "/g:" + opts.gravity  + "/" + encoded_url + "." + opts.extension
   var shaObj = new jsSHA("SHA-256", "BYTES")
   shaObj.setHMACKey(opts.key, "HEX")
   shaObj.update(hex2a(opts.salt))
   shaObj.update(path)
-  var hmac = shaObj.getHMAC("B64").replace("=", "").replace('/', '_').replace('+', '-')
+  var hmac = shaObj.getHMAC("B64").replace(/=/g, "").replace(/\//g, '_').replace(/\+/g, '-')
   return opts.proxy_url + "/" + hmac + path
 }
 
@@ -30,8 +30,11 @@ $(function () {
     e.preventDefault()
     $('input, select').each(function () {
       var inputName = $(this).attr('id')
-      if (inputName !== 'submit' && inputName !== 'enlarge') {
+      if (inputName !== 'submit' && inputName !== 'enlarge' && inputName !== 'proxy_url' ) {
         formValues[inputName] = $(this).val()
+      }
+      if (inputName == 'proxy_url') {
+        formValues[inputName] = $(this).val().replace(/\/$/, '')
       }
       if (inputName == 'enlarge') {
         if  ($(this).is(':checked')) {
@@ -43,5 +46,6 @@ $(function () {
     })
     var proxyUrl = generateProxyUrl(formValues)
     $('#result').val(proxyUrl)
+    formValues = {}
   })
 })
